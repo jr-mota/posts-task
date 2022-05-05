@@ -69,6 +69,6 @@ export default {
   padding: 23px 78px 12px 78px;
   margin: 186px auto 24px auto;
 
-  box-shadow: 0px 4px 27px rgba(230, 231, 234, 0.78);
+  box-shadow: 0px 4px 27px rgba(230, 231, 234, 0.8);
 }
 </style>

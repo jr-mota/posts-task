@@ -1,9 +1,9 @@
 <template>
-  <article class="post-item" :class="{ 'post-item_empty': !id }">
+  <article class="post-item">
     <div class="post-item__cell post-item__id">{{ id || "" }}</div>
-    <div class="post-item__cell post-item__head">{{ header }}</div>
-    <div class="post-item__cell post-item__description">
-      {{ description }}
+    <div class="post-item__cell post-item__title">{{ title }}</div>
+    <div class="post-item__cell post-item__body">
+      {{ body }}
     </div>
   </article>
 </template>
@@ -15,11 +15,11 @@ export default {
       type: Number,
       default: 0,
     },
-    header: {
+    title: {
       type: String,
       default: "",
     },
-    description: {
+    body: {
       type: String,
       default: "",
     },
@@ -31,20 +31,14 @@ export default {
 .post-item {
   display: flex;
   justify-content: center;
-  align-items: center;
+
+  user-select: red;
 
   font-weight: 600;
 
-  height: 87px;
-
-  &_empty {
-    height: 56px;
-  }
+  min-height: 87px;
 
   &__cell {
-    min-width: 0;
-    height: 100%;
-
     display: flex;
     justify-content: center;
 
@@ -66,10 +60,11 @@ export default {
     border-top: none;
   }
 
-  &__head {
+  &__title {
     flex: 5;
 
     justify-content: flex-start;
+    align-items: center;
 
     border-left: none;
     border-top: none;
@@ -78,7 +73,7 @@ export default {
     overflow: hidden;
   }
 
-  &__description {
+  &__body {
     flex: 4;
 
     justify-content: flex-start;

@@ -5,7 +5,7 @@
       type="text"
       class="posts-search__input"
       placeholder="Поиск"
-      v-model="searchText"
+      @input="updateSearchText"
     />
     <label for="posts-search__input" class="posts-search__icon">
       <svg
@@ -26,9 +26,15 @@
 
 <script>
 export default {
-  data: () => ({
-    searchText: "",
-  }),
+  emits: {
+    "update:modelValue": (searchText) => typeof searchText === "string",
+  },
+
+  methods: {
+    updateSearchText(e) {
+      this.$emit("update:modelValue", e.target.value);
+    },
+  },
 };
 </script>
 

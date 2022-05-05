@@ -1,97 +1,128 @@
 <template>
   <div class="posts">
     <div class="posts__header">
-      <div class="posts__header-item posts__header-item-1">
-        ID
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          xmlns:xlink="http://www.w3.org/1999/xlink"
-          version="1.1"
-          id="Layer_1"
-          x="0px"
-          y="0px"
-          viewBox="0 0 330 330"
-          style="enable-background: new 0 0 330 330"
-          xml:space="preserve"
-        >
-          <path
-            id="XMLID_225_"
-            d="M325.607,79.393c-5.857-5.857-15.355-5.858-21.213,0.001l-139.39,139.393L25.607,79.393  c-5.857-5.857-15.355-5.858-21.213,0.001c-5.858,5.858-5.858,15.355,0,21.213l150.004,150c2.813,2.813,6.628,4.393,10.606,4.393  s7.794-1.581,10.606-4.394l149.996-150C331.465,94.749,331.465,85.251,325.607,79.393z"
-          />
-        </svg>
-      </div>
-      <div class="posts__header-item posts__header-item-2">
-        Заголовок
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          xmlns:xlink="http://www.w3.org/1999/xlink"
-          version="1.1"
-          id="Layer_1"
-          x="0px"
-          y="0px"
-          viewBox="0 0 330 330"
-          style="enable-background: new 0 0 330 330"
-          xml:space="preserve"
-        >
-          <path
-            id="XMLID_225_"
-            d="M325.607,79.393c-5.857-5.857-15.355-5.858-21.213,0.001l-139.39,139.393L25.607,79.393  c-5.857-5.857-15.355-5.858-21.213,0.001c-5.858,5.858-5.858,15.355,0,21.213l150.004,150c2.813,2.813,6.628,4.393,10.606,4.393  s7.794-1.581,10.606-4.394l149.996-150C331.465,94.749,331.465,85.251,325.607,79.393z"
-          />
-        </svg>
-      </div>
-      <div class="posts__header-item posts__header-item-3">
-        Описание
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          xmlns:xlink="http://www.w3.org/1999/xlink"
-          version="1.1"
-          id="Layer_1"
-          x="0px"
-          y="0px"
-          viewBox="0 0 330 330"
-          style="enable-background: new 0 0 330 330"
-          xml:space="preserve"
-        >
-          <path
-            id="XMLID_225_"
-            d="M325.607,79.393c-5.857-5.857-15.355-5.858-21.213,0.001l-139.39,139.393L25.607,79.393  c-5.857-5.857-15.355-5.858-21.213,0.001c-5.858,5.858-5.858,15.355,0,21.213l150.004,150c2.813,2.813,6.628,4.393,10.606,4.393  s7.794-1.581,10.606-4.394l149.996-150C331.465,94.749,331.465,85.251,325.607,79.393z"
-          />
-        </svg>
-      </div>
+      <posts-sort-item
+        v-for="(sortElem, idx) of sortItems"
+        :key="idx"
+        :postKey="sortElem.key"
+        :name="sortElem.name"
+        :svgToDown="sortElem.key === sortBy && sortUp"
+        @click="changeSortBy(sortElem.key)"
+      />
     </div>
     <div class="posts__list">
       <post-item
-        v-for="(post, idx) of posts"
+        v-for="(post, idx) of sortedPosts"
         :key="idx"
         :id="post.id"
-        :header="post.title"
-        :description="post.body"
+        :title="post.title"
+        :body="post.body"
       />
     </div>
   </div>
 </template>
 
 <script>
+import PostsSortItem from "./PostsSortItem.vue";
 import PostItem from "./PostItem.vue";
 
-import PostsService from "../services/PostsService.js";
+import postSort from "../helpers/postSort.js";
+import postIncludesText from "../helpers/postIncludesText.js";
 
 export default {
+  props: {
+    searchText: {
+      type: String,
+      default: "",
+    },
+    page: {
+      type: Number,
+      default: 1,
+    },
+    maxViewElems: {
+      type: Number,
+      default: 10,
+    },
+  },
+
+  emits: {
+    "update-posts-length": (postsLength) => typeof postsLength === "number",
+  },
+
   components: {
+    PostsSortItem,
     PostItem,
   },
 
-  async mounted() {
-    try {
-      this.$store.commit("posts/setPosts", await PostsService.findAllPosts());
-    } catch (e) {
-      console.warn("Api error");
-    }
+  data: () => ({
+    sortItems: [
+      { name: "ID", key: "id" },
+      { name: "Заголовок", key: "title" },
+      { name: "Описание", key: "body" },
+    ],
+
+    sortBy: "",
+    sortUp: false,
+  }),
+
+  methods: {
+    changeSortBy(sortBy) {
+      this.changeSortUp(this.sortBy, sortBy);
+
+      this.sortBy = sortBy;
+    },
+    changeSortUp(oldSortBy, newSortBy) {
+      if (oldSortBy !== newSortBy && this.sortUp) {
+        this.sortUp = true;
+
+        return;
+      }
+
+      this.sortUp = !this.sortUp;
+    },
   },
 
   computed: {
-    posts() {
+    allPosts() {
       return this.$store.getters["posts/getPosts"];
+    },
+    searchedPosts() {
+      if (this.searchText) {
+        return this.allPosts.filter((post) =>
+          postIncludesText(post, this.searchText)
+        );
+      } else {
+        return this.allPosts;
+      }
+    },
+    paginatedPosts() {
+      const start = (this.page - 1) * this.maxViewElems;
+
+      return this.searchedPosts.slice(start, start + this.maxViewElems);
+    },
+    postsWithFilling() {
+      const paginatedPosts = this.paginatedPosts;
+
+      if (paginatedPosts.length < this.maxViewElems) {
+        for (let i = paginatedPosts.length; i < this.maxViewElems; ++i) {
+          paginatedPosts.push({});
+        }
+      }
+
+      return paginatedPosts;
+    },
+    sortedPosts() {
+      if (this.sortBy === "") return this.postsWithFilling;
+
+      return [...this.postsWithFilling].sort((prev, next) =>
+        postSort(prev, next, this.sortBy, this.sortUp)
+      );
+    },
+  },
+
+  watch: {
+    searchedPosts(newPosts) {
+      this.$emit("update-posts-length", newPosts.length);
     },
   },
 };
@@ -105,41 +136,6 @@ export default {
     height: 54px;
 
     background-color: #474955;
-  }
-
-  &__header-item {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    font-weight: 600;
-
-    color: #fff;
-
-    cursor: pointer;
-
-    svg {
-      width: 12px;
-      height: 12px;
-
-      margin-top: 3px;
-
-      margin-left: 34px;
-
-      path {
-        fill: #fff;
-      }
-    }
-  }
-
-  &__header-item-1 {
-    flex: 1;
-  }
-  &__header-item-2 {
-    flex: 4;
-  }
-  &__header-item-3 {
-    flex: 5;
   }
 
   margin-top: 15px;

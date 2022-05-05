@@ -54,6 +54,8 @@ export default {
 
     padding: 16px 26px;
 
+    font-size: 15px;
+
     border: none;
     outline: none;
 

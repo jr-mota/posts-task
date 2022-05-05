@@ -86,7 +86,7 @@ export default {
     allPosts() {
       return this.$store.getters["posts/getPosts"];
     },
-    searchedPosts() {
+    postsWithSearchedText() {
       if (this.searchText) {
         return this.allPosts.filter((post) =>
           postIncludesText(post, this.searchText)
@@ -98,9 +98,12 @@ export default {
     paginatedPosts() {
       const start = (this.page - 1) * this.maxViewElems;
 
-      return this.searchedPosts.slice(start, start + this.maxViewElems);
+      return this.postsWithSearchedText.slice(start, start + this.maxViewElems);
     },
     postsWithFilling() {
+      // Если для текущей страницы нет всех 10 (или другого количества) постов,
+      // заполняем пустыми, чтобы таблица не прыгала, ну или чтобы было как в макете )
+
       const paginatedPosts = this.paginatedPosts;
 
       if (paginatedPosts.length < this.maxViewElems) {
@@ -121,7 +124,7 @@ export default {
   },
 
   watch: {
-    searchedPosts(newPosts) {
+    postsWithSearchedText(newPosts) {
       this.$emit("update-posts-length", newPosts.length);
     },
   },
